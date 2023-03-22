@@ -41,7 +41,7 @@ jobs:
    command: 
    - python -m spacy download en
    - cd /tmp/code; git clone https://github.com/weiyx16/deduplicate-text-datasets
-   - cd /tmp/code/deduplicate-text-datasets; bash cleanCC202050.sh
+   - cd /tmp/code/deduplicate-text-datasets; bash cleanCC202104.sh
    submit_args:
       env:
        {

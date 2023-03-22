@@ -11,7 +11,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Load a dataset.')
 parser.add_argument('--data_dir', default='./', type=str)
 parser.add_argument('--data_file', default='./', type=str)
-parser.add_argument('--save_dir', default='./', type=str)
+# parser.add_argument('--save_dir', default='./', type=str)
 parser.add_argument('--save_file', default='./', type=str)
 parser.add_argument('--tokenize', action='store_true')
 parser.add_argument('--tokenizer', type=str, default="gpt2")
@@ -34,7 +34,7 @@ pre_sep = args.pre_sep
 post_sep = args.post_sep
 
 data_dir = args.data_dir
-save_dir = args.save_dir
+# save_dir = args.save_dir
 data_file = args.data_file
 save_file = args.save_file
 
@@ -53,8 +53,8 @@ def tok(x):
     return out
 
 
-if not os.path.exists(save_dir):
-    os.mkdir(save_dir)
+# if not os.path.exists(save_dir):
+#     os.mkdir(save_dir)
 
 
 if len(data_file) > 5:
@@ -81,6 +81,7 @@ if len(data_file) > 5:
                 text.append(prev.encode('utf-8'))
             del src_text
         elif data_file.endswith('jsonl'):
+            # e.g. CC202050 and Pile-CC
             src_text = list(jsonlines.open(data_file, 'r'))
             text = []
             for l in tqdm(src_text, miniters=1000000, mininterval=60):
@@ -94,3 +95,45 @@ if len(data_file) > 5:
         for x in text:
             next_line = x # sep() + x
             fout.write(next_line)
+
+elif len(data_dir) > 5:
+    # for folder input, we also save it to a single file
+    data_files = os.listdir(data_dir)
+    data_files = [os.path.join(data_dir, data_file) for data_file in data_files]
+    fout = open(save_file, "wb")
+
+    for data_file in data_files:
+        with mp.get_context("fork").Pool(mp.cpu_count()) as p:
+            if data_file.endswith('txt'):
+                # e.g. openwebtext
+                src_text = open(data_file).readlines()
+                text = []
+                # we need to merge document into a single line with \n to seperate the sentences or paragraphs.
+                prev = ''
+                for x in tqdm(src_text, miniters=1000000, mininterval=60):
+                    if x != '\n':
+                        prev += x
+                    else:
+                        # we reach the end of documents
+                        prev = prev.strip('\n')+'\n\n'
+                        text.append(prev.encode('utf-8'))
+                        prev = ''
+                if prev != '' and prev != '\n':
+                    prev = prev.strip('\n')+'\n\n'
+                    text.append(prev.encode('utf-8'))
+                del src_text
+            elif data_file.endswith('jsonl'):
+                # e.g. CC202050 and Pile-CC
+                src_text = list(jsonlines.open(data_file, 'r'))
+                text = []
+                for l in tqdm(src_text, miniters=1000000, mininterval=60):
+                    prev = l['text'].strip('\n')+'\n\n'
+                    text.append(prev.encode('utf-8'))
+                del src_text
+            else:
+                raise NotImplementedError(data_file)
+
+            text = p.map(tok, text)
+            for x in text:
+                next_line = x # sep() + x
+                fout.write(next_line)

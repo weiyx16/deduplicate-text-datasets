@@ -23,14 +23,14 @@ cargo build
 
 echo 3
 ### ========== Download Data ===============
-/output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/kosmos-1/jsonl/CC-2021-04_id_cleaned.jsonl?sv=2020-04-08&st=2023-03-22T16%3A24%3A25Z&se=2023-04-23T16%3A24%3A00Z&sr=b&sp=r&sig=ReRYau8RaDv3KZNHIiINDpWEhtr38KG%2FEILSr3JLFaM%3D" ./data/CC-2021-04_id_cleaned.jsonl
+/output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/the-pile/train/Pile-CC?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D" --recursive ./
 ### ========= End ==============
 
 echo 4
 ### =========== Convert the dataformat ============
-export dataset=CC-2021-04_id_cleaned.jsonl
-python convertData.py --data_file data/$dataset --save_file data/$dataset.convert # --tokenize
-sudo rm ./data/$dataset
+export dataset=PileCC.txt
+python convertData.py --data_dir ./Pile-CC --save_file data/$dataset.convert # --tokenize
+sudo rm -r ./Pile-CC
 export dataset=$dataset.convert
 ### ========= End ============
 
@@ -62,4 +62,4 @@ sudo rm ./data/$dataset.dedup.tmp
 
 echo 7
 ### ========== Upload Data ===============
-/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/CC-2021-04_id_cleaned.dedup.txt?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D"
+/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/PileCC.dedup.txt?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D"

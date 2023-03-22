@@ -3,8 +3,9 @@ set -x
 echo 0
 ### ========= Install Rust ============
 ### We assume we are in the node setup in GPT-style
-sudo chmod -R 777 /home/t-yixuanwei/.profile
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # we need to enter 1 via command
+sudo chmod -R 777 /home/$USER/.profile
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rust.sh
+sh rust.sh -y
 source $HOME/.cargo/env
 ### ========= End ============
 
@@ -12,7 +13,7 @@ echo 1
 ### ========= Setup Envs ============
 # ! Warning: [OPTIONAL] (used to download tf datasets for wiki-40B)
 # ! Warning: with newest version we can't download the data.. (but notice that, the latest wiki40b is 1.3.0, for tfds with 3.0.0, the version of wiki40b is 1.1.0)
-sudo /opt/conda/bin/pip install tensorflow tensorflow_datasets==3.0.0 sentencepiece transformers apache_beam apache-beam[gcp]
+sudo /opt/conda/bin/pip install jsonlines tensorflow tensorflow_datasets==3.0.0 sentencepiece transformers apache_beam apache-beam[gcp]
 ### ========= End ============
 
 echo 2

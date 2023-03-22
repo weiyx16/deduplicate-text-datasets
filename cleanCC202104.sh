@@ -29,6 +29,7 @@ echo 3
 echo 4
 ### =========== Convert the dataformat ============
 export dataset=CC-2021-04_id_cleaned.jsonl
+mkdir data
 python convertData.py --data_file data/$dataset --save_file data/$dataset.convert # --tokenize
 sudo rm ./data/$dataset
 export dataset=$dataset.convert

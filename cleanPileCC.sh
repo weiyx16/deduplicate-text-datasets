@@ -29,6 +29,7 @@ echo 3
 echo 4
 ### =========== Convert the dataformat ============
 export dataset=PileCC.txt
+mkdir data
 python convertData.py --data_dir ./Pile-CC --save_file data/$dataset.convert # --tokenize
 sudo rm -r ./Pile-CC
 export dataset=$dataset.convert

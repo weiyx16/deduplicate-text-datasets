@@ -13,6 +13,8 @@
 
 import tensorflow_datasets as tfds
 import tensorflow as tf
+from tensorflow_datasets.core.utils import gcs_utils
+gcs_utils._is_gcs_disabled = True
 import os
 import struct
 import numpy as np
@@ -47,7 +49,7 @@ dataset_name = args.name
 
 
 ds = tfds.load(dataset_name, split=split, shuffle_files=False, batch_size=2**16,
-               data_dir=data_dir)
+               data_dir=data_dir, try_gcs=False)
 assert isinstance(ds, tf.data.Dataset)
 print(ds)
 
@@ -83,6 +85,8 @@ with mp.get_context("fork").Pool(mp.cpu_count()) as p:
         text = b['text'].numpy()
         text = p.map(tok,text)
         
+        # len(text) == 65536
+        # text[x] = a binary string (with \n, maybe a page of wikipedia)
         for x in text:
             next_line = sep()+x
             fout.write(next_line)

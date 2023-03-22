@@ -40,7 +40,7 @@ else:
 
 S = data_size//total_jobs
 
-
+## Split the input files with byte offset
 for jobstart in range(0, total_jobs, jobs_at_once):
     wait = []
     for i in range(jobstart,jobstart+jobs_at_once):
@@ -58,6 +58,7 @@ for jobstart in range(0, total_jobs, jobs_at_once):
 
 print("Checking all wrote correctly")
 
+## Rerun previous steps for double check
 while True:
     files = ["%s.part.%d-%d"%(sys.argv[1],s, e) for s,e in started]
     
@@ -79,7 +80,7 @@ while True:
 
 print("Merging suffix trees")
 
-os.popen("rm tmp/out.table.bin.*").read()
+os.popen("rm tmp/out.table.bin.*").read() # clean potential previous output
 
 torun = " --suffix-path ".join(files)
 print("./target/debug/dedup_dataset merge --output-file %s --suffix-path %s --num-threads %d"%("tmp/out.table.bin", torun, mp.cpu_count()))

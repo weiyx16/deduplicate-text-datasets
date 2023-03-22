@@ -3,31 +3,36 @@ set -x
 echo 0
 ### ========= Install Rust ============
 ### We assume we are in the node setup in GPT-style
-# sudo chmod -R 777 /home/t-yixuanwei/.profile
-# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # we need to enter 1 via command
-# source $HOME/.cargo/env
+sudo chmod -R 777 /home/t-yixuanwei/.profile
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # we need to enter 1 via command
+source $HOME/.cargo/env
 ### ========= End ============
 
 echo 1
 ### ========= Setup Envs ============
-# # ! Warning: [OPTIONAL] (used to download tf datasets for wiki-40B)
-# # ! Warning: with newest version we can't download the data.. (but notice that, the latest wiki40b is 1.3.0, for tfds with 3.0.0, the version of wiki40b is 1.1.0)
-# sudo /opt/conda/bin/pip install tensorflow tensorflow_datasets==3.0.0 sentencepiece apache_beam apache-beam[gcp]
+# ! Warning: [OPTIONAL] (used to download tf datasets for wiki-40B)
+# ! Warning: with newest version we can't download the data.. (but notice that, the latest wiki40b is 1.3.0, for tfds with 3.0.0, the version of wiki40b is 1.1.0)
+sudo /opt/conda/bin/pip install tensorflow tensorflow_datasets==3.0.0 sentencepiece transformers apache_beam apache-beam[gcp]
 ### ========= End ============
 
 echo 2
 ###  ========= Buildup Rust Envs ===========
-# glt clone https://github.com/weiyx16/deduplicate-text-datasets
-# cd deduplicate-text-datasets
-# cargo build
-### ========= End ============
+cargo build
+### ========= End ==============
 
+echo 3
+### ========== Download Data ===============
+/output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/kosmos-1/jsonl/CC-2020-50_id_cleaned.jsonl?sv=2020-04-08&st=2023-03-22T15%3A55%3A33Z&se=2023-04-23T15%3A55%3A00Z&sr=b&sp=r&sig=WuG1xrVmFHXy%2BU5aicZ%2FUdRrWKMcbtjXhw70bk4Skps%3D" ./data/CC-2020-50_id_cleaned.jsonl
+### ========= End ==============
+
+echo 4
 ### =========== Convert the dataformat ============
 export dataset=CC-2020-50_id_cleaned.jsonl
 python convertData.py --data_file data/$dataset --save_file data/$dataset.convert # --tokenize
 export dataset=$dataset.convert
 ### ========= End ============
 
+echo 5
 ### =========== Build Suffix_array ================
 # Finding all repeated substrings within a document
 ulimit -Sn 1000000
@@ -35,6 +40,7 @@ sudo /opt/conda/bin/python scripts/make_suffix_array.py data/$dataset # --tokeni
 sudo rm ./data/$dataset.part.*
 ### ========= End ============
 
+echo 6
 ### =========== Deduplicate ================
 # Output means: This means that the deduplicator found $output sequences of length $length that existed somewhere else in the dataset.
 # In our paper, we used 50 tokens (which is 100 bytes---so remember that if you pass --tokenize you'll need to double the number of bytes for the length threshold).
@@ -51,3 +57,7 @@ sudo rm /tmp/cache/*
 sudo rm ./data/$dataset.part.*
 sudo rm ./data/$dataset.dedup.tmp
 ### ========= End ============
+
+echo 7
+### ========== Upload Data ===============
+/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/CC-2020-50_id_cleaned.dedup.txt?sv=2020-04-08&st=2023-03-22T15%3A55%3A33Z&se=2023-04-23T15%3A55%3A00Z&sr=b&sp=r&sig=WuG1xrVmFHXy%2BU5aicZ%2FUdRrWKMcbtjXhw70bk4Skps%3D"

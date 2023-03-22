@@ -81,13 +81,15 @@ if len(data_file) > 5:
                 text.append(prev.encode('utf-8'))
             del src_text
         elif data_file.endswith('jsonl'):
-            src_text = list(jsonlines.open(args.file, 'r'))
+            src_text = list(jsonlines.open(data_file, 'r'))
             text = []
             for l in tqdm(src_text, miniters=1000000, mininterval=60):
                 prev = l['text'].strip('\n')+'\n\n'
                 text.append(prev.encode('utf-8'))
             del src_text
-            
+        else:
+            raise NotImplementedError(data_file)
+
         text = p.map(tok, text)
         for x in text:
             next_line = x # sep() + x

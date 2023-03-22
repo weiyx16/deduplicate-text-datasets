@@ -1,5 +1,6 @@
 import os
 import struct
+import jsonlines
 import numpy as np
 from tqdm import tqdm
 from transformers import GPT2Tokenizer, T5Tokenizer
@@ -79,6 +80,14 @@ if len(data_file) > 5:
                 prev = prev.strip('\n')+'\n\n'
                 text.append(prev.encode('utf-8'))
             del src_text
+        elif data_file.endswith('jsonl'):
+            src_text = list(jsonlines.open(args.file, 'r'))
+            text = []
+            for l in tqdm(src_text, miniters=1000000, mininterval=60):
+                prev = l['text'].strip('\n')+'\n\n'
+                text.append(prev.encode('utf-8'))
+            del src_text
+            
         text = p.map(tok, text)
         for x in text:
             next_line = x # sep() + x

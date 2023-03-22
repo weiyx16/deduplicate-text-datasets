@@ -75,6 +75,7 @@ sudo rm ./data/$dataset.dedup.tmp
 echo 3
 ############# To Our True Datasets From MultiSources ##################### 
 # Assume dataset is the ancher, and we dedup the dataset2
+# Validated with across-similar between dataset1 and dataset1 and we remove all sentences!!
 export dataset2=openwebtext.2.txt
 python convertData.py --data_file data/$dataset2 --save_file data/$dataset2.convert # --tokenize
 export dataset2=$dataset2.convert

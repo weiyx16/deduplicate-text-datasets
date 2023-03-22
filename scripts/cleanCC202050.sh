@@ -1,0 +1,53 @@
+set -x
+
+echo 0
+### ========= Install Rust ============
+### We assume we are in the node setup in GPT-style
+# sudo chmod -R 777 /home/t-yixuanwei/.profile
+# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # we need to enter 1 via command
+# source $HOME/.cargo/env
+### ========= End ============
+
+echo 1
+### ========= Setup Envs ============
+# # ! Warning: [OPTIONAL] (used to download tf datasets for wiki-40B)
+# # ! Warning: with newest version we can't download the data.. (but notice that, the latest wiki40b is 1.3.0, for tfds with 3.0.0, the version of wiki40b is 1.1.0)
+# sudo /opt/conda/bin/pip install tensorflow tensorflow_datasets==3.0.0 sentencepiece apache_beam apache-beam[gcp]
+### ========= End ============
+
+echo 2
+###  ========= Buildup Rust Envs ===========
+# glt clone https://github.com/weiyx16/deduplicate-text-datasets
+# cd deduplicate-text-datasets
+# cargo build
+### ========= End ============
+
+### =========== Convert the dataformat ============
+export dataset=CC-2020-50_id_cleaned.jsonl
+python convertData.py --data_file data/$dataset --save_file data/$dataset.convert # --tokenize
+export dataset=$dataset.convert
+### ========= End ============
+
+### =========== Build Suffix_array ================
+# Finding all repeated substrings within a document
+ulimit -Sn 1000000
+sudo /opt/conda/bin/python scripts/make_suffix_array.py data/$dataset # --tokenize
+sudo rm ./data/$dataset.part.*
+### ========= End ============
+
+### =========== Deduplicate ================
+# Output means: This means that the deduplicator found $output sequences of length $length that existed somewhere else in the dataset.
+# In our paper, we used 50 tokens (which is 100 bytes---so remember that if you pass --tokenize you'll need to double the number of bytes for the length threshold).
+export duplength=50
+cargo run self-similar --data-file data/$dataset --length-threshold $duplength --cache-dir /tmp/cache --num-threads 64
+sudo rm ./tmp/*
+
+# gather lines of documents to be removed with has over $duplength overlap with others
+cargo run collect --data-file data/$dataset --cache-dir /tmp/cache --length-threshold $duplength > ./tmp/drop_tokens_file
+
+sudo /opt/conda/bin/python scripts/finish_single_file.py data/$dataset ./tmp/drop_tokens_file data/$dataset.dedup False # the last one means detokenized or not
+sudo rm ./tmp/*
+sudo rm /tmp/cache/*
+sudo rm ./data/$dataset.part.*
+sudo rm ./data/$dataset.dedup.tmp
+### ========= End ============

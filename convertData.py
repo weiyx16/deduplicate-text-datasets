@@ -87,7 +87,7 @@ if len(data_file) > 5:
             src_text = list(jsonlines.open(data_file, 'r'))
             text = []
             for l in tqdm(src_text, miniters=1000000, mininterval=60):
-                prev = l['text'].strip('\n')+'\n\n'
+                prev = l['text'].replace('\n\n', '\n').replace('\n\n\n', '\n').strip('\n')+'\n\n'
                 text.append(prev.encode('utf-8'))
             del src_text
         else:
@@ -97,6 +97,7 @@ if len(data_file) > 5:
         for x in text:
             next_line = sep() + x
             fout.write(next_line)
+        del text
 
 elif len(data_dir) > 5:
     # for folder input, we also save it to a single file
@@ -129,7 +130,7 @@ elif len(data_dir) > 5:
                 src_text = list(jsonlines.open(data_file, 'r'))
                 text = []
                 for l in tqdm(src_text, miniters=1000000, mininterval=60):
-                    prev = l['text'].strip('\n')+'\n\n'
+                    prev = l['text'].replace('\n\n', '\n').replace('\n\n\n', '\n').strip('\n')+'\n\n'
                     text.append(prev.encode('utf-8'))
                 del src_text
             else:
@@ -139,3 +140,4 @@ elif len(data_dir) > 5:
             for x in text:
                 next_line = sep() + x
                 fout.write(next_line)
+            del text

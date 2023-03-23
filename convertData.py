@@ -20,11 +20,11 @@ parser.add_argument('--post_sep', type=bytes, default=b"")
 args = parser.parse_args()
 
 if args.tokenize:
-    assert False, "we don't support it due to de-tokenizer part"
+    # assert False, "we don't support it due to de-tokenizer part"
     if args.tokenizer == 'gpt2':
         tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    elif args.tokenizer == 't5':
-        tokenizer = T5Tokenizer.from_pretrained('t5-small')
+    # elif args.tokenizer == 't5':
+    #     tokenizer = T5Tokenizer.from_pretrained('t5-small')
     else:
         raise
 else:

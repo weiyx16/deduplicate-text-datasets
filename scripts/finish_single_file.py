@@ -21,15 +21,15 @@ deduped = sys.argv[3]
 tokenized = sys.argv[4]
 
 if tokenized == "True":
-    assert False, "we don't support it due to de-tokenizer part"
+    # assert False, "we don't support it due to de-tokenizer part"
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 else:
     tokenizer = None
 
 def tok(x):
     if tokenizer is not None:
-        x = np.frombuffer(x, dtype=np.uint16) #.view(np.uint16)
-        out = tokenizer.decode(x)
+        # x = np.frombuffer(x, dtype=np.uint16) #.view(np.uint16)
+        out = tokenizer.decode(x) + '\n\n'
     else:
         out = x.decode('utf-8')
     return out
@@ -55,8 +55,14 @@ while len(remove) > 0:
 new_ds.write(ds.read())
 
 save_ds = open(deduped,"w")
+if tokenized == "True":
+    lines = open(deduped+'.tmp', "rb").read()
+    lines = np.frombuffer(lines, dtype=np.uint16)
+    lines = np.split(lines, np.argwhere(lines == 628).flatten()) # 628 is \n\n in tokenized
+else:
+    lines = open(deduped+'.tmp', "rb").readlines() 
 suc_count, fail_count = 1, 1
-for l in open(deduped+'.tmp', "rb").readlines():
+for l in lines:
     try:
         save_ds.write(tok(l))
         suc_count += 1

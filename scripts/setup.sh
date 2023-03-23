@@ -40,7 +40,7 @@ echo 3
 # ! Warning: For datasets with separated files, we need to merge them first.
 # ! Warning: We may need another approach to tokenize them first. 
 # ! Warning: 466M text => 1.9G table.bin (with 8.9M duplication occures) -> 452M text (rerun with 833 duplication occurs)
-# TODO: ! Warning: We don't support it tokenizer for now. We meets some problems when detokenize it.
+# We now support it tokenized. And we prefer to use it tokenized.
 ### =========== Convert the dataformat ============
 export dataset=openwebtext.1.txt
 python convertData.py --data_file data/$dataset --save_file data/$dataset.convert # --tokenize

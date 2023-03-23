@@ -29,7 +29,8 @@ else:
 def tok(x):
     if tokenizer is not None:
         # x = np.frombuffer(x, dtype=np.uint16) #.view(np.uint16)
-        out = tokenizer.decode(x) + '\n\n'
+        x = x[3:] # we pop out the head of text here during loading (prefix + idx)
+        out = tokenizer.decode(x)
     else:
         out = x.decode('utf-8')
     return out
@@ -49,6 +50,10 @@ new_ds = open(deduped+'.tmp',"wb")
 start = 0
 while len(remove) > 0:
     a,b = remove.pop()
+    if tokenized:
+        # when tokenized, the dedup is performed on sub-token level
+        a = a // 2 * 2
+        b = b // 2 * 2
     new_ds.write(ds.read(a-start))
     ds.seek(b)
     start = b
@@ -58,7 +63,7 @@ save_ds = open(deduped,"w")
 if tokenized == "True":
     lines = open(deduped+'.tmp', "rb").read()
     lines = np.frombuffer(lines, dtype=np.uint16)
-    lines = np.split(lines, np.argwhere(lines == 628).flatten()) # 628 is \n\n in tokenized
+    lines = np.split(lines, np.argwhere(lines == 65535).flatten()) # 65535 is the magic prefix
 else:
     lines = open(deduped+'.tmp', "rb").readlines() 
 suc_count, fail_count = 1, 1

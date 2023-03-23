@@ -40,6 +40,8 @@ save_file = args.save_file
 
 UID = 0
 def sep():
+    if not args.tokenize:
+        return b''
     global UID
     UID += 1
     return pre_sep+struct.pack("<I", UID)+post_sep
@@ -93,7 +95,7 @@ if len(data_file) > 5:
 
         text = p.map(tok, text)
         for x in text:
-            next_line = x # sep() + x
+            next_line = sep() + x
             fout.write(next_line)
 
 elif len(data_dir) > 5:
@@ -135,5 +137,5 @@ elif len(data_dir) > 5:
 
             text = p.map(tok, text)
             for x in text:
-                next_line = x # sep() + x
+                next_line = sep() + x
                 fout.write(next_line)

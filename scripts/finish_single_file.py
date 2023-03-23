@@ -14,6 +14,7 @@
 import sys
 import numpy as np
 from transformers import GPT2Tokenizer
+import multiprocessing as mp
 
 original = sys.argv[1]
 remove_file = sys.argv[2]
@@ -67,12 +68,14 @@ if tokenized == "True":
 else:
     lines = open(deduped+'.tmp', "rb").readlines() 
 suc_count, fail_count = 1, 1
-for l in lines:
-    try:
-        save_ds.write(tok(l))
-        suc_count += 1
-    except:
-        fail_count += 1
+with mp.get_context("fork").Pool(mp.cpu_count()) as p:
+    lines = p.map(tok, lines)
+    for l in lines:
+        try:
+            save_ds.write(l)
+            suc_count += 1
+        except:
+            fail_count += 1
 print(f"Warning: suc: {suc_count} with fail: {fail_count}")
 
 # save_ds = open(deduped,"w")

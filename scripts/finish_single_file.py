@@ -31,7 +31,10 @@ def tok(x):
     if tokenizer is not None:
         # x = np.frombuffer(x, dtype=np.uint16) #.view(np.uint16)
         x = x[3:] # we pop out the head of text here during loading (prefix + idx)
-        out = tokenizer.decode(x)
+        try:
+            out = tokenizer.decode(x)
+        except:
+            out = "a bad sentence!"
     else:
         out = x.decode('utf-8')
     return out
@@ -71,10 +74,10 @@ suc_count, fail_count = 1, 1
 with mp.get_context("fork").Pool(mp.cpu_count()) as p:
     lines = p.map(tok, lines)
     for l in lines:
-        try:
+        if l != "a bad sentence!":
             save_ds.write(l)
             suc_count += 1
-        except:
+        else:
             fail_count += 1
 print(f"Warning: suc: {suc_count} with fail: {fail_count}")
 

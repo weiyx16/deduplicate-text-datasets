@@ -13,6 +13,7 @@ parser.add_argument('--data_dir', default='./', type=str)
 parser.add_argument('--data_file', default='./', type=str)
 # parser.add_argument('--save_dir', default='./', type=str)
 parser.add_argument('--save_file', default='./', type=str)
+parser.add_argument('--subset', default='0/1', type=str)
 parser.add_argument('--tokenize', action='store_true')
 parser.add_argument('--tokenizer', type=str, default="gpt2")
 parser.add_argument('--pre_sep', type=bytes, default=b"\xff\xff")
@@ -29,6 +30,11 @@ if args.tokenize:
         raise
 else:
     tokenizer = None
+
+xth, ytotal = list(map(lambda x: int(x),  args.subset.split('/')))
+assert xth < ytotal, f"xth should be smaller than ytotal: subset = {args.subset}"
+if ytotal > 1:
+    assert len(args.data_dir) > 5, "We don't support subset for single file input"
 
 pre_sep = args.pre_sep
 post_sep = args.post_sep
@@ -103,6 +109,11 @@ elif len(data_dir) > 5:
     # for folder input, we also save it to a single file
     data_files = os.listdir(data_dir)
     data_files = [os.path.join(data_dir, data_file) for data_file in data_files]
+    data_files.sort()
+    if ytotal > 1:
+        files_per_subset = len(data_files) // ytotal + 1
+        data_files = data_files[xth * files_per_subset: min((xth+1) * files_per_subset, len(data_files))]
+        print(f" Use subset: {len(data_files)}")
     fout = open(save_file, "wb")
 
     for data_file in data_files:

@@ -30,7 +30,7 @@ echo 4
 ### =========== Convert the dataformat ============
 export dataset=CC-2020-50_id_cleaned.jsonl
 mkdir data
-python convertData.py --data_file data/$dataset --save_file data/$dataset.convert # --tokenize
+python convertData.py --data_file data/$dataset --save_file data/$dataset.convert --tokenize
 sudo rm ./data/$dataset
 export dataset=$dataset.convert
 ### ========= End ============
@@ -39,7 +39,7 @@ echo 5
 ### =========== Build Suffix_array ================
 # Finding all repeated substrings within a document
 ulimit -Sn 1000000
-sudo /opt/conda/bin/python scripts/make_suffix_array.py data/$dataset # --tokenize
+sudo /opt/conda/bin/python scripts/make_suffix_array.py data/$dataset --tokenize
 sudo rm ./data/$dataset.part.*
 ### ========= End ============
 
@@ -47,14 +47,14 @@ echo 6
 ### =========== Deduplicate ================
 # Output means: This means that the deduplicator found $output sequences of length $length that existed somewhere else in the dataset.
 # In our paper, we used 50 tokens (which is 100 bytes---so remember that if you pass --tokenize you'll need to double the number of bytes for the length threshold).
-export duplength=50
+export duplength=200
 cargo run self-similar --data-file data/$dataset --length-threshold $duplength --cache-dir /tmp/cache --num-threads 64
 sudo rm ./tmp/*
 
 # gather lines of documents to be removed with has over $duplength overlap with others
 cargo run collect --data-file data/$dataset --cache-dir /tmp/cache --length-threshold $duplength > ./tmp/drop_tokens_file
 
-sudo /opt/conda/bin/python scripts/finish_single_file.py data/$dataset ./tmp/drop_tokens_file data/$dataset.dedup False # the last one means detokenized or not
+sudo /opt/conda/bin/python scripts/finish_single_file.py data/$dataset ./tmp/drop_tokens_file data/$dataset.dedup True # the last one means detokenized or not
 sudo rm ./tmp/*
 sudo rm /tmp/cache/*
 sudo rm ./data/$dataset.part.*
@@ -63,4 +63,4 @@ sudo rm ./data/$dataset.dedup.tmp
 
 echo 7
 ### ========== Upload Data ===============
-/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/CC-2020-50_id_cleaned.dedup.txt?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D"
+/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/CC-2020-50_id_cleaned.dedup.ExactLen200.txt?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D"

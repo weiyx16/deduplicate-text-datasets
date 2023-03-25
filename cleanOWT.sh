@@ -23,49 +23,30 @@ cargo build
 
 echo 3
 ### ========== Download Data ===============
-/output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/the-pile/train/Pile-CC?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D" --recursive ./
+/output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/openwebtext?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D" --recursive ./
 ### ========= End ==============
 
 echo 4
 ### =========== Convert the dataformat ============
-export dataset=PileCC0of2.txt
+export dataset=OWT.txt
 mkdir data
-python convertData.py --data_dir ./Pile-CC --save_file data/$dataset.convert --tokenize --subset 0/2
+python convertData.py --data_dir ./openwebtext --save_file data/$dataset.convert --tokenize
+sudo rm -r ./openwebtext
 export dataset=$dataset.convert
 ### ========= End ============
 
-echo 5
-### =========== Build Suffix_array ================
-# Finding all repeated substrings within a document
-ulimit -Sn 1000000
-sudo /opt/conda/bin/python scripts/make_suffix_array.py data/$dataset --tokenize
-sudo rm ./data/$dataset.part.*
-### ========= End ============
-
-echo 6
-### =========== Deduplicate ================
-# Output means: This means that the deduplicator found $output sequences of length $length that existed somewhere else in the dataset.
-# In our paper, we used 50 tokens (which is 100 bytes---so remember that if you pass --tokenize you'll need to double the number of bytes for the length threshold).
-export duplength=200
-cargo run self-similar --data-file data/$dataset --length-threshold $duplength --cache-dir /tmp/cache --num-threads 64
-sudo rm ./tmp/*
-
-# gather lines of documents to be removed with has over $duplength overlap with others
-cargo run collect --data-file data/$dataset --cache-dir /tmp/cache --length-threshold $duplength > ./tmp/drop_tokens_file
-
-sudo /opt/conda/bin/python scripts/finish_single_file.py data/$dataset ./tmp/drop_tokens_file data/$dataset.dedup True # the last one means detokenized or not
-sudo rm ./tmp/*
-sudo rm /tmp/cache/*
-sudo rm ./data/$dataset.table.*
-sudo rm ./data/$dataset.part.*
-sudo rm ./data/$dataset.dedup.tmp
-### ========= End ============
+echo 3
+### ========== Download Data ===============
+/output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/openwebtext2/shard/train?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D" --recursive ./
+# /output/azcopy copy "https://vlpretraineastus.blob.core.windows.net/crawl-text/the-pile/train/OpenWebText2?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D" --recursive ./
+### ========= End ==============
 
 echo 4
 ### =========== Convert the dataformat ============
-export dataset=PileCC1of2.txt
+export dataset=OWT2.txt
 mkdir data
-python convertData.py --data_dir ./Pile-CC --save_file data/$dataset.convert --tokenize --subset 1/2
+python convertData.py --data_dir ./train --save_file data/$dataset.convert --tokenize
+sudo rm -r ./train
 export dataset=$dataset.convert
 ### ========= End ============
 
@@ -73,6 +54,8 @@ echo 5
 ### =========== Build Suffix_array ================
 # Finding all repeated substrings within a document
 ulimit -Sn 1000000
+cat OWT.txt.convert OWT2.txt.convert >> OWT12.txt.convert
+export dataset=OWT12.txt.convert
 sudo /opt/conda/bin/python scripts/make_suffix_array.py data/$dataset --tokenize
 sudo rm ./data/$dataset.part.*
 ### ========= End ============
@@ -91,11 +74,10 @@ cargo run collect --data-file data/$dataset --cache-dir /tmp/cache --length-thre
 sudo /opt/conda/bin/python scripts/finish_single_file.py data/$dataset ./tmp/drop_tokens_file data/$dataset.dedup True # the last one means detokenized or not
 sudo rm ./tmp/*
 sudo rm /tmp/cache/*
-sudo rm ./data/$dataset.table.*
 sudo rm ./data/$dataset.part.*
 sudo rm ./data/$dataset.dedup.tmp
 ### ========= End ============
 
 echo 7
 ### ========== Upload Data ===============
-/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/PileCC.dedup.ExactLen200.txt?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D"
+/output/azcopy copy data/$dataset.dedup "https://vlpretraineastus.blob.core.windows.net/crawl-text/cc_merged/OpenWebText12.dedup.txt?sv=2021-04-10&st=2022-09-06T05%3A36%3A34Z&se=2025-09-05T05%3A36%3A00Z&sr=c&sp=racwdxltf&sig=8yIkemAX4aA8frrJoW1snsJB07suONjEHC5zR736MQw%3D"

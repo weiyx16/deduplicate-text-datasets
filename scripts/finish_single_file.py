@@ -36,7 +36,10 @@ def tok(x):
         except:
             out = "a bad sentence!"
     else:
-        out = x.decode('utf-8')
+        try:
+            out = x.decode('utf-8')
+        except:
+            out = "a bad sentence!"
     return out
 
 remove = []

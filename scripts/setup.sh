@@ -102,9 +102,9 @@ echo -1
 ### [after suffix create] See how much times a query contained in suffix files
 sudo /opt/conda/bin/python scripts/count_occurrences.py --suffix data/$dataset --query " on Tuesday" # --tokenize
 ### See how much times a query contained in original files
-cat data/openwebtext.1.txt | grep -ao " on Tuesday" | wc -l
+cat data/$dataset | grep -ao " on Tuesday" | wc -l
 
-### [after deduplicate] See the exact duplicated ones
+### [after deduplicate (self-similar and collect)] See the exact duplicated ones
 data = open("$dataset","rb").read()
 import re
 tofind = data[22668:22727]

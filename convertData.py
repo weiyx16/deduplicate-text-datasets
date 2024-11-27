@@ -54,8 +54,15 @@ def sep():
 
 def tok(x):
     if args.tokenize:
-        out = tokenizer.encode(x.decode("utf-8"))
-        out = np.array(out, dtype=np.uint16).tobytes() # np.array(out, dtype=np.uint16).view(np.uint8).tobytes()
+        x = x.decode("utf-8")
+        x = x.split('\n')
+        out = [tokenizer.encode(_x) for _x in x]
+        out_convert = []
+        for _out in out:
+            _out = _out + [65534]
+            out_convert.extend(_out) # 65535 is the beginning
+        # we don't need the separator of documents since we have sep()
+        out = np.array(out_convert, dtype=np.uint16).tobytes() # np.array(out, dtype=np.uint16).view(np.uint8).tobytes()
     else:
         out = x
     return out
@@ -129,11 +136,14 @@ elif len(data_dir) > 5:
                         prev += x
                     else:
                         # we reach the end of documents
-                        prev = prev.strip('\n')+'\n\n'
+                        # we add \n\n use special tokens
+                        prev = prev.strip('\n')
+                        if not args.tokenize:
+                            prev += '\n\n'
                         text.append(prev.encode('utf-8'))
                         prev = ''
                 if prev != '' and prev != '\n':
-                    prev = prev.strip('\n')+'\n\n'
+                    prev = prev.strip('\n')
                     text.append(prev.encode('utf-8'))
                 del src_text
             elif data_file.endswith('jsonl'):

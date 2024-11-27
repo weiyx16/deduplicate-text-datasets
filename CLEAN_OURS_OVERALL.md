@@ -77,6 +77,19 @@ Max Ram on Azure: 672G (pure CPU) [E96-24ds_v5 Southeast_asia Zone-2]
 + [cross-dedup] CC-KP and C4OWT -> CC ?
 
 
+## 20230402 ReVisit
+在PileCC上测出来发现掉点明显. 训练loss更低:4.46 to 4.12，validation on wikitext-103大概从5.04直接到了5.96
+Other: Data Exact Dedup Quality
+    6.1. review some examples from PileCC-0of2 [seems_ok]
+    6.1.1. extract and keep only sentence more than 3 words. [基本没有区别，可能还更差一点点]
+    6.2. test on more evaluation benchmarks [@zhenghong]
+    6.3. rerun it on our machine [done; 在wikitext-103上的确变得很差，validate loss基本增加了1]
+
+    6.4. Review Exdup code
+    6.4.1. run OWT1 with tokenizer
+    6.4.2. run OWT1 without tokenizer
+
+
 ## Questions
 1. is 100 duplength too short [maybe ok] [the unit is bytes I think.]
 > e.g. we remove any document that does not contain between 50 and 100,000 words, or whose mean word length is outside the range of 3 to 10 characters; we remove any document with a symbol-to-word ratio greater than 0.1 for either the hash symbol or the ellipsis; and we remove any document with more than 90% of lines starting with a bullet point, or more than 30% ending with an ellipsis. -> 90 tokens (180 bytes)

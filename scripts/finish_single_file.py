@@ -30,9 +30,14 @@ else:
 def tok(x):
     if tokenizer is not None:
         # x = np.frombuffer(x, dtype=np.uint16) #.view(np.uint16)
+        # we have ensure that we start with \xff\xff id id with np.split in the previous part.
         x = x[3:] # we pop out the head of text here during loading (prefix + idx)
+        x = np.split(x, np.argwhere(x == 65534).flatten()) # we split it with \n
         try:
-            out = tokenizer.decode(x)
+            out = [tokenizer.decode(_x[1:]) if _x[0]==65534 else tokenizer.decode(_x) for _x in x if len(_x) > 0]
+            out = '\n'.join(list(filter(lambda x: len(x) > 1, out)))  # re join with \n
+            out = out.strip('\n')
+            out += '\n\n'         # re add back with document separator
         except:
             out = "a bad sentence!"
     else:
@@ -62,6 +67,11 @@ while len(remove) > 0:
         a = a // 2 * 2
         b = b // 2 * 2
     new_ds.write(ds.read(a-start))
+    ds.seek(a)
+    torm = ds.read(b-a)
+    if torm.endswith(b'\xff\xff'):
+        # we need to keep this, actually we also have other cases where \xff\xff is identified as duplicated.
+        new_ds.write(b'\xff\xff')
     ds.seek(b)
     start = b
 new_ds.write(ds.read())
@@ -70,7 +80,8 @@ save_ds = open(deduped,"w")
 if tokenized == "True":
     lines = open(deduped+'.tmp', "rb").read()
     lines = np.frombuffer(lines, dtype=np.uint16)
-    lines = np.split(lines, np.argwhere(lines == 65535).flatten()) # 65535 is the magic prefix
+    # heads = 65535, id_p1, id_p0
+    lines = np.split(lines, np.argwhere(lines == 65535).flatten())[1:] # 65535 is the magic prefix
 else:
     lines = open(deduped+'.tmp', "rb").readlines() 
 suc_count, fail_count = 1, 1
